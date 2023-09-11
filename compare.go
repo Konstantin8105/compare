@@ -11,11 +11,13 @@ import (
 	diff "github.com/olegfedoseev/image-diff"
 )
 
+// Basic values
 const (
 	Key      = "UPDATE"
 	KeyValid = "true"
 )
 
+// Testing interface is valid for *testing.T
 type Testing interface {
 	Errorf(format string, args ...any)
 }
@@ -57,6 +59,7 @@ func Test(t Testing, filename string, actual []byte) {
 	}
 }
 
+// Save `.png` files
 func Save(filename string, img image.Image) (err error) {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -71,6 +74,9 @@ func Save(filename string, img image.Image) (err error) {
 	return
 }
 
+// TestPng compare `.png` files
+// for update test screens run in console:
+// UPDATE=true go test
 func TestPng(t Testing, filename string, actual image.Image) {
 	if os.Getenv(Key) == KeyValid {
 		err := Save(filename, actual)
