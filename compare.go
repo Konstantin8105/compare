@@ -2,6 +2,7 @@ package compare
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"io/ioutil"
@@ -85,35 +86,35 @@ func TestPng(t Testing, filename string, actual image.Image) {
 			return
 		}
 	}
-	if actual == nil {
-		t.Errorf("image is nil")
-		return
-	}
-	// get expect result
-	dir, err := os.MkdirTemp("", "actual")
-	if err != nil {
-		t.Errorf("Cannot create temp folder: %v", err)
-		return
-	}
-	actualFilename := filepath.Join(dir, "a.png")
-	err = Save(actualFilename, actual)
-	if err != nil {
-		t.Errorf("Cannot save `%s`: %v", actualFilename, err)
-		return
-	}
-	diff, percent, err := diff.CompareFiles(filename, actualFilename)
-	if err != nil {
-		t.Errorf("Cannot compare images: %v", err)
-		return
-	}
-	if percent == 0.0 {
-		return
-	}
-	t.Errorf("Images is different at %.2f percent", percent)
-	// save diff image
-	err = Save(filename+".new.png", diff)
-	if err != nil {
-		t.Errorf("Cannot save `%s`: %v", actualFilename, err)
-		return
+	if err := func() error {
+		if actual == nil {
+			return fmt.Errorf("image is nil")
+		}
+		// get expect result
+		dir, err := os.MkdirTemp("", "actual")
+		if err != nil {
+			return fmt.Errorf("Cannot create temp folder: %v", err)
+		}
+		actualFilename := filepath.Join(dir, "a.png")
+		err = Save(actualFilename, actual)
+		if err != nil {
+			return fmt.Errorf("Cannot save `%s`: %v", actualFilename, err)
+		}
+		diff, percent, err := diff.CompareFiles(filename, actualFilename)
+		if err != nil {
+			return fmt.Errorf("Cannot compare images: %v", err)
+		}
+		if percent == 0.0 {
+			return nil
+		}
+		err = fmt.Errorf("Images is different at %.2f percent", percent)
+		// save diff image
+		errS := Save(filename+".new.png", diff)
+		if errS != nil {
+			err = fmt.Errorf("Cannot save `%s`: %v. %v", actualFilename, err, errS)
+		}
+		return err
+	}(); err != nil {
+		t.Errorf("%s: %v", filename, err)
 	}
 }
