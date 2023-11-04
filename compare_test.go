@@ -1,6 +1,7 @@
 package compare_test
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
@@ -107,5 +108,42 @@ func TestPng(t *testing.T) {
 	compare.TestPng(&c, ".test.png", wrong)
 	if !c.iserror {
 		t.Fatalf("check wrong body: %v", c.err)
+	}
+}
+
+func TestDiff(t *testing.T) {
+	tcs := [][2]string{[2]string{
+		"Output:1\nsame\nSecond",
+		"Output:2\nsame\nFirst",
+	}, [2]string{
+		"Channel1",
+		"Channel2\nOne\nTwo\n",
+	}, [2]string{
+		"o1\no2\no3\n04\n05\n06\n08\n09\n10",
+		"o1\no2\no3\n04\n05\n06\n08\n19\n10",
+	}}
+	{
+		var buf bytes.Buffer
+		for i := 0; i < 1500; i++ {
+			fmt.Fprintf(&buf, "%06d\n", i)
+		}
+		base := string(buf.Bytes())
+		diff := buf.Bytes()
+		diff[301] = '1'
+		tcs = append(tcs, [2]string{base, string(diff)})
+	}
+	for index, tc := range tcs {
+		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
+			var c checker
+			compare.TestDiff(
+				&c,
+				[]byte(tc[0]),
+				[]byte(tc[1]),
+			)
+			if !c.iserror {
+				return
+			}
+			compare.Test(t, fmt.Sprintf(".ShowDiff%d", index), []byte(c.err.Error()))
+		})
 	}
 }

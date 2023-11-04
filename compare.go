@@ -6,8 +6,11 @@ import (
 	"image"
 	"image/png"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	diff "github.com/olegfedoseev/image-diff"
 )
@@ -45,18 +48,8 @@ func Test(t Testing, filename string, actual []byte) {
 			t.Errorf("Cannot write snapshot to file new: %v", err)
 			return
 		}
-		size := 1000
-		if size < len(actual) {
-			actual = actual[:size]
-		}
-		if size < len(expect) {
-			expect = expect[:size]
-		}
-		t.Errorf("Snapshots is not same:\nActual:\n%s\nExpect:\n%s\nmeld %s %s",
-			actual,
-			expect,
-			filename, f2,
-		)
+		TestDiff(t, actual, expect)
+		t.Errorf("meld %s %s &", filename, f2)
 	}
 }
 
@@ -117,4 +110,53 @@ func TestPng(t Testing, filename string, actual image.Image) {
 	}(); err != nil {
 		t.Errorf("%s: %v", filename, err)
 	}
+}
+
+// TestDiff will print two strings vertically next to each other so that line
+// differences are easier to read.
+func TestDiff(t Testing, actual, expect []byte) {
+	a := string(actual)
+	b := string(expect)
+	if a == b {
+		return
+	}
+	//
+	aLines := strings.Split(a, "\n")
+	bLines := strings.Split(b, "\n")
+	maxLines := int(math.Max(float64(len(aLines)), float64(len(bLines))))
+	out := "\n"
+	view := false
+	var viewAmount int
+
+	for lineNumber := 0; lineNumber < maxLines; lineNumber++ {
+		aLine := "<< EMPTY LINE>>"
+		bLine := "<< EMPTY LINE>>"
+
+		// Replace NULL characters with a dot. Otherwise the strings will look
+		// exactly the same but have different length (and therfore not be
+		// equal).
+		if lineNumber < len(aLines) {
+			aLine = strconv.Quote(aLines[lineNumber])
+		}
+		if lineNumber < len(bLines) {
+			bLine = strconv.Quote(bLines[lineNumber])
+		}
+
+		diffFlag := " "
+		if aLine != bLine {
+			view = true
+			diffFlag = "*"
+		}
+		if !view {
+			continue
+		}
+		viewAmount++
+		out += fmt.Sprintf("%s %3d %-40s%s\n", diffFlag, lineNumber+1, aLine, bLine)
+
+		if len(aLines) < lineNumber || len(bLines) < lineNumber || 20 < viewAmount {
+			out += "and more other ..."
+			break
+		}
+	}
+	t.Errorf("%s", out)
 }
