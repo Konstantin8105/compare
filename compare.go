@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -30,22 +29,22 @@ type Testing interface {
 // UPDATE=true go test
 func Test(t Testing, filename string, actual []byte) {
 	if os.Getenv(Key) == KeyValid {
-		if err := ioutil.WriteFile(filename, actual, 0644); err != nil {
-			t.Errorf("Cannot write snapshot to file: %v", err)
+		if err := os.WriteFile(filename, actual, 0644); err != nil {
+			t.Errorf("Cannot write snapshot to file: %w", err)
 			return
 		}
 	}
 	// get expect result
-	expect, err := ioutil.ReadFile(filename)
+	expect, err := os.ReadFile(filename)
 	if err != nil {
-		t.Errorf("Cannot read snapshot file: %v", err)
+		t.Errorf("Cannot read snapshot file: %w", err)
 		return
 	}
 	// compare
 	if !bytes.Equal(actual, expect) {
 		f2 := filename + ".new"
-		if err := ioutil.WriteFile(f2, actual, 0644); err != nil {
-			t.Errorf("Cannot write snapshot to file new: %v", err)
+		if err := os.WriteFile(f2, actual, 0644); err != nil {
+			t.Errorf("Cannot write snapshot to file new: %w", err)
 			return
 		}
 		TestDiff(t, actual, expect)
@@ -86,25 +85,25 @@ func TestPng(t Testing, filename string, actual image.Image) {
 		// get expect result
 		dir, err := os.MkdirTemp("", "actual")
 		if err != nil {
-			return fmt.Errorf("Cannot create temp folder: %v", err)
+			return fmt.Errorf("cannot create temp folder: %w", err)
 		}
 		actualFilename := filepath.Join(dir, "a.png")
 		err = Save(actualFilename, actual)
 		if err != nil {
-			return fmt.Errorf("Cannot save `%s`: %v", actualFilename, err)
+			return fmt.Errorf("cannot save `%s`: %w", actualFilename, err)
 		}
 		diff, percent, err := diff.CompareFiles(filename, actualFilename)
 		if err != nil {
-			return fmt.Errorf("Cannot compare images: %v", err)
+			return fmt.Errorf("cannot compare images: %w", err)
 		}
 		if percent == 0.0 {
 			return nil
 		}
-		err = fmt.Errorf("Images is different at %.2f percent", percent)
+		err = fmt.Errorf("images is different at %.2f percent", percent)
 		// save diff image
 		errS := Save(filename+".new.png", diff)
 		if errS != nil {
-			err = fmt.Errorf("Cannot save `%s`: %v. %v", actualFilename, err, errS)
+			err = fmt.Errorf("cannot save `%s`: %w. %w", actualFilename, err, errS)
 		}
 		return err
 	}(); err != nil {
@@ -115,6 +114,14 @@ func TestPng(t Testing, filename string, actual image.Image) {
 // TestDiff will print two strings vertically next to each other so that line
 // differences are easier to read.
 func TestDiff(t Testing, actual, expect []byte) {
+	if err := Diff(actual, expect); err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+// Diff will print two strings vertically next to each other so that line
+// differences are easier to read.
+func Diff(actual, expect []byte) (err error) {
 	a := string(actual)
 	b := string(expect)
 	if a == b {
@@ -158,5 +165,6 @@ func TestDiff(t Testing, actual, expect []byte) {
 			break
 		}
 	}
-	t.Errorf("%s", out)
+	err = fmt.Errorf("%s", out)
+	return
 }
