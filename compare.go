@@ -48,7 +48,7 @@ func Test(t Testing, filename string, actual []byte) {
 			return
 		}
 		TestDiff(t, actual, expect)
-		t.Errorf("meld %s %s &", filename, f2)
+		t.Errorf("meld \"%s\" \"%s\" &", filename, f2)
 	}
 }
 
