@@ -71,6 +71,25 @@ func Test(t *testing.T) {
 	}
 }
 
+func Example() {
+	var c checker
+
+	wrong := []byte("bad\n")
+	compare.Test(&c, ".test", wrong)
+	if !c.iserror {
+		panic("check wrong body")
+	}
+	fmt.Fprintf(os.Stdout, "%v", c.err)
+
+	// Output:
+	// *   1 "good"                                  "bad"
+	// *   2 "good"                                  ""
+	// *   3 "good"                                  << EMPTY LINE>>
+	// *   4 "good"                                  << EMPTY LINE>>
+	// and more other ...
+	// meld ".test" ".test.new" &
+}
+
 func defaultPng() image.Image {
 	size := 100
 	img := image.NewNRGBA(image.Rect(0, 0, size, size))

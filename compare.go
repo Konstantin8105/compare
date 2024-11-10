@@ -47,8 +47,9 @@ func Test(t Testing, filename string, actual []byte) {
 			t.Errorf("Cannot write snapshot to file new: %w", err)
 			return
 		}
-		TestDiff(t, actual, expect)
-		t.Errorf("meld \"%s\" \"%s\" &", filename, f2)
+		t.Errorf("%v\nmeld \"%s\" \"%s\" &",
+			Diff(expect, actual),
+			filename, f2)
 	}
 }
 
@@ -113,17 +114,17 @@ func TestPng(t Testing, filename string, actual image.Image) {
 
 // TestDiff will print two strings vertically next to each other so that line
 // differences are easier to read.
-func TestDiff(t Testing, actual, expect []byte) {
-	if err := Diff(actual, expect); err != nil {
+func TestDiff(t Testing, txt1, txt2 []byte) {
+	if err := Diff(txt1, txt2); err != nil {
 		t.Errorf("%v", err)
 	}
 }
 
 // Diff will print two strings vertically next to each other so that line
 // differences are easier to read.
-func Diff(actual, expect []byte) (err error) {
-	a := string(actual)
-	b := string(expect)
+func Diff(txt1, txt2 []byte) (err error) {
+	a := string(txt1)
+	b := string(txt2)
 	if a == b {
 		return
 	}
