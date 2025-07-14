@@ -72,6 +72,14 @@ func Test(t *testing.T) {
 }
 
 func Example() {
+	{
+		old := compare.App
+		compare.App = "universal"
+		defer func() {
+			compare.App = old
+		}()
+	}
+
 	var c checker
 
 	wrong := []byte("bad\n")
@@ -87,7 +95,7 @@ func Example() {
 	// *   3 "good"                                  << EMPTY LINE>>
 	// *   4 "good"                                  << EMPTY LINE>>
 	// and more other ...
-	// meld ".test" ".test.new" &
+	// universal ".test" ".test.new" &
 }
 
 func defaultPng() image.Image {

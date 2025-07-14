@@ -8,11 +8,19 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
 	diff "github.com/olegfedoseev/image-diff"
 )
+
+var App = "meld" // linux
+func init() {
+	if runtime.GOOS == "windows" {
+		App = "WinMergeU.exe"
+	}
+}
 
 // Basic values
 const (
@@ -47,8 +55,9 @@ func Test(t Testing, filename string, actual []byte) {
 			t.Errorf("Cannot write snapshot to file new: %w", err)
 			return
 		}
-		t.Errorf("%v\nmeld \"%s\" \"%s\" &",
+		t.Errorf("%v\n%s \"%s\" \"%s\" &",
 			Diff(expect, actual),
+			App,
 			filename, f2)
 	}
 }
