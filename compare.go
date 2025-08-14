@@ -36,6 +36,9 @@ type Testing interface {
 // for update test screens run in console:
 // UPDATE=true go test
 func Test(t Testing, filename string, actual []byte) {
+	// remove ends
+	actual = bytes.ReplaceAll(actual, []byte("\r"), nil)
+	// comparing
 	if os.Getenv(Key) == KeyValid {
 		if err := os.WriteFile(filename, actual, 0644); err != nil {
 			t.Errorf("Cannot write snapshot to file: %w", err)
@@ -49,7 +52,6 @@ func Test(t Testing, filename string, actual []byte) {
 		return
 	}
 	// remove ends
-	actual = bytes.ReplaceAll(actual, []byte("\r"), nil)
 	expect = bytes.ReplaceAll(expect, []byte("\r"), nil)
 	// compare
 	if !bytes.Equal(actual, expect) {
