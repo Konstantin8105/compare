@@ -48,6 +48,9 @@ func Test(t Testing, filename string, actual []byte) {
 		t.Errorf("Cannot read snapshot file: %w", err)
 		return
 	}
+	// remove ends
+	actual = bytes.ReplaceAll(actual, []byte("\r"), nil)
+	expect = bytes.ReplaceAll(expect, []byte("\r"), nil)
 	// compare
 	if !bytes.Equal(actual, expect) {
 		f2 := filename + ".new"
