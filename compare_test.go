@@ -22,26 +22,30 @@ func (c *checker) Errorf(format string, args ...any) {
 }
 
 func TestWrong(t *testing.T) {
-	var c checker
-
-	os.Setenv(compare.Key, compare.KeyValid)
-
-	for i := 0; i < 2; i++ {
-		compare.Test(&c, "/EEEe/d", nil)
-		if !c.iserror {
-			t.Fatal("no wrong_name")
+	t.Run("Wrong", func(t *testing.T) {
+		var c checker
+		os.Setenv(compare.Key, compare.KeyValid)
+		for i := 0; i < 2; i++ {
+			compare.Test(&c, "/EEEe/d", nil)
+			if !c.iserror {
+				t.Fatal("no wrong_name")
+			}
+			compare.TestPng(&c, "/sdsdas3/3/", nil)
+			if !c.iserror {
+				t.Fatal("no wrong_name")
+			}
+			compare.TestPng(&c, "/sdsdas3/3/", defaultPng())
+			if !c.iserror {
+				t.Fatal("no wrong_name")
+			}
+			os.Unsetenv(compare.Key)
 		}
-		compare.TestPng(&c, "/sdsdas3/3/", nil)
-		if !c.iserror {
-			t.Fatal("no wrong_name")
-		}
-		compare.TestPng(&c, "/sdsdas3/3/", defaultPng())
-		if !c.iserror {
-			t.Fatal("no wrong_name")
-		}
-
-		os.Unsetenv(compare.Key)
-	}
+	})
+	t.Run("no file", func(t *testing.T) {
+		var c checker
+		compare.Test(&c, "no file or wrong", []byte(""))
+		compare.Test(t, ".NoFile", []byte(c.err.Error()))
+	})
 }
 
 func Test(t *testing.T) {
@@ -139,13 +143,13 @@ func TestPng(t *testing.T) {
 }
 
 func TestDiff(t *testing.T) {
-	tcs := [][2]string{[2]string{
+	tcs := [][2]string{{
 		"Output:1\nsame\nSecond",
 		"Output:2\nsame\nFirst",
-	}, [2]string{
+	}, {
 		"Channel1",
 		"Channel2\nOne\nTwo\n",
-	}, [2]string{
+	}, {
 		"o1\no2\no3\n04\n05\n06\n08\n09\n10",
 		"o1\no2\no3\n04\n05\n06\n08\n19\n10",
 	}}
@@ -154,7 +158,7 @@ func TestDiff(t *testing.T) {
 		for i := 0; i < 1500; i++ {
 			fmt.Fprintf(&buf, "%06d\n", i)
 		}
-		base := string(buf.Bytes())
+		base := buf.String()
 		diff := buf.Bytes()
 		diff[301] = '1'
 		tcs = append(tcs, [2]string{base, string(diff)})

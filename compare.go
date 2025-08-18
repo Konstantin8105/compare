@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	errorTree "github.com/Konstantin8105/errors"
+
 	diff "github.com/olegfedoseev/image-diff"
 )
 
@@ -48,7 +50,11 @@ func Test(t Testing, filename string, actual []byte) {
 	// get expect result
 	expect, err := os.ReadFile(filename)
 	if err != nil {
-		t.Errorf("Cannot read snapshot file: %w", err)
+		et := errorTree.New("Test")
+		_ = et.Add(fmt.Errorf("Cannot read snapshot file"))
+		_ = et.Add(fmt.Errorf("Filename: '%s'", filename))
+		_ = et.Add(err)
+		t.Errorf("%v", et)
 		return
 	}
 	// remove ends
