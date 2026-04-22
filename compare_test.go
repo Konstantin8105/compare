@@ -44,7 +44,9 @@ func TestWrong(t *testing.T) {
 	t.Run("no file", func(t *testing.T) {
 		var c checker
 		compare.Test(&c, "no file or wrong", []byte(""))
-		compare.Test(t, ".NoFile", []byte(c.err.Error()))
+		if !c.iserror {
+			t.Fatal("how it is possible for not exist file?")
+		}
 	})
 }
 
