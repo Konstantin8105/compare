@@ -66,8 +66,8 @@ func Test(t *testing.T) {
 	if c.iserror {
 		t.Fatalf("add key-value: %v", c.err)
 	}
-
 	os.Unsetenv(compare.Key)
+
 	compare.Test(&c, filename, actual)
 	if c.iserror {
 		t.Fatal("check error")
@@ -88,11 +88,24 @@ func Example() {
 			compare.App = old
 		}()
 	}
-
+	filename := ".test"
+	_ = os.Remove(filename) // ignore error
+	defer func() {
+		_ = os.Remove(filename) // ignore error
+	}()
 	var c checker
 
+	var actual []byte
+	for i := 0; i < 2300; i++ {
+		actual = append(actual, []byte("good\n")...)
+	}
+
+	os.Setenv(compare.Key, compare.KeyValid)
+	compare.Test(&c, filename, actual)
+	os.Unsetenv(compare.Key)
+
 	wrong := []byte("bad\n")
-	compare.Test(&c, ".test", wrong)
+	compare.Test(&c, filename, wrong)
 	if !c.iserror {
 		panic("check wrong body")
 	}
