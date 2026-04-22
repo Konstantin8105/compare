@@ -25,7 +25,7 @@ func TestWrong(t *testing.T) {
 	t.Run("Wrong", func(t *testing.T) {
 		var c checker
 		os.Setenv(compare.Key, compare.KeyValid)
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			compare.Test(&c, "/EEEe/d", nil)
 			if !c.iserror {
 				t.Fatal("no wrong_name")
@@ -146,8 +146,8 @@ func TestPng(t *testing.T) {
 	if c.iserror {
 		t.Fatalf("add key-value: %v", c.err)
 	}
-
 	os.Unsetenv(compare.Key)
+
 	compare.TestPng(&c, ".test.png", actual)
 	if c.iserror {
 		t.Fatal("check error")

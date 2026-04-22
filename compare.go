@@ -49,6 +49,7 @@ func Test(t Testing, filename string, actual []byte) {
 				return
 			}
 		}
+		err = nil // ignore error
 	}
 	// get expect result
 	expect, err := os.ReadFile(filename)
