@@ -40,6 +40,16 @@ type Testing interface {
 func Test(t Testing, filename string, actual []byte) {
 	// remove ends
 	actual = bytes.ReplaceAll(actual, []byte("\r"), nil)
+	// comparing and avoid addition saving
+	if os.Getenv(Key) == KeyValid {
+		expect, err := os.ReadFile(filename)
+		if (err == nil && !bytes.Equal(actual, expect)) || err != nil {
+			if err := os.WriteFile(filename, actual, 0644); err != nil {
+				t.Errorf("Cannot write snapshot to file: %w", err)
+				return
+			}
+		}
+	}
 	// get expect result
 	expect, err := os.ReadFile(filename)
 	if err != nil {
@@ -49,13 +59,6 @@ func Test(t Testing, filename string, actual []byte) {
 		_ = et.Add(err)
 		t.Errorf("%v", et)
 		return
-	}
-	// comparing and avoid addition saving
-	if os.Getenv(Key) == KeyValid && !bytes.Equal(expect, actual) {
-		if err := os.WriteFile(filename, actual, 0644); err != nil {
-			t.Errorf("Cannot write snapshot to file: %w", err)
-			return
-		}
 	}
 	// remove ends
 	expect = bytes.ReplaceAll(expect, []byte("\r"), nil)
