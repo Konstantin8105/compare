@@ -1,5 +1,7 @@
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
+github.com/Konstantin8105/snippet v0.0.0-20260502084555-a0c479a1ac2f h1:0fSg8JCTOiT5BqvUEcKt4mAVr5Q1fMmiAH+dyQs3k6w=
+github.com/Konstantin8105/snippet v0.0.0-20260502084555-a0c479a1ac2f/go.mod h1:lmnqxb9+qcIwfKo3ghQDD72Azm48MVBtS6a1w3kB9q0=
 github.com/Konstantin8105/tree v0.1.0/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
 github.com/Konstantin8105/tree v0.1.1 h1:EaEOLocAJ5IyQ+KisgY43X/TXoVyFXVd1nsykCleBxw=
 github.com/Konstantin8105/tree v0.1.1/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=

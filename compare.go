@@ -2,6 +2,7 @@ package compare
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -38,18 +39,15 @@ type Testing interface {
 // for update test screens run in console:
 // UPDATE=true go test
 func Test(t Testing, filename string, actual []byte) {
-	// remove ends
-	actual = bytes.ReplaceAll(actual, []byte("\r"), nil)
 	// comparing and avoid addition saving
 	if os.Getenv(Key) == KeyValid {
 		expect, err := os.ReadFile(filename)
-		if (err == nil && !bytes.Equal(actual, expect)) || err != nil {
+		if (err == nil && Diff(actual, expect) != nil) || err != nil {
 			if err := os.WriteFile(filename, actual, 0644); err != nil {
 				t.Errorf("Cannot write snapshot to file: %w", err)
 				return
 			}
 		}
-		err = nil // ignore error
 	}
 	// get expect result
 	expect, err := os.ReadFile(filename)
@@ -61,19 +59,16 @@ func Test(t Testing, filename string, actual []byte) {
 		t.Errorf("%v", et)
 		return
 	}
-	// remove ends
-	expect = bytes.ReplaceAll(expect, []byte("\r"), nil)
 	// compare
-	if !bytes.Equal(actual, expect) {
+	if err = Diff(expect, actual); err != nil {
 		f2 := filename + ".new"
-		if err := os.WriteFile(f2, actual, 0644); err != nil {
-			t.Errorf("Cannot write snapshot to file new: %w", err)
-			return
+		if errw := os.WriteFile(f2, actual, 0644); errw != nil {
+			err = errors.Join(err, fmt.Errorf("Cannot write snapshot to file new: %w", errw))
 		}
 		t.Errorf("%v\n%s \"%s\" \"%s\" &",
-			Diff(expect, actual),
-			App,
-			filename, f2)
+			err,
+			App, filename, f2,
+		)
 	}
 }
 
@@ -147,6 +142,8 @@ func TestDiff(t Testing, txt1, txt2 []byte) {
 // Diff will print two strings vertically next to each other so that line
 // differences are easier to read.
 func Diff(txt1, txt2 []byte) (err error) {
+	txt1 = bytes.ReplaceAll(txt1, []byte("\r"), []byte{})
+	txt2 = bytes.ReplaceAll(txt2, []byte("\r"), []byte{})
 	a := string(txt1)
 	b := string(txt2)
 	if a == b {
@@ -156,11 +153,12 @@ func Diff(txt1, txt2 []byte) (err error) {
 	aLines := strings.Split(a, "\n")
 	bLines := strings.Split(b, "\n")
 	maxLines := int(math.Max(float64(len(aLines)), float64(len(bLines))))
-	out := "\n"
+	var out strings.Builder
+	out.WriteString("\n")
 	view := false
 	var viewAmount int
 
-	for lineNumber := 0; lineNumber < maxLines; lineNumber++ {
+	for lineNumber := range maxLines {
 		aLine := "<< EMPTY LINE>>"
 		bLine := "<< EMPTY LINE>>"
 
@@ -183,13 +181,13 @@ func Diff(txt1, txt2 []byte) (err error) {
 			continue
 		}
 		viewAmount++
-		out += fmt.Sprintf("%s %3d %-40s%s\n", diffFlag, lineNumber+1, aLine, bLine)
+		fmt.Fprintf(&out, "%s %3d %-40s%s\n", diffFlag, lineNumber+1, aLine, bLine)
 
 		if len(aLines) < lineNumber || len(bLines) < lineNumber || 20 < viewAmount {
-			out += "and more other ..."
+			out.WriteString("and more other ...")
 			break
 		}
 	}
-	err = fmt.Errorf("%s", out)
+	err = fmt.Errorf("%s", out.String())
 	return
 }
